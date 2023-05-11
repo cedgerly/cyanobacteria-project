@@ -1,3 +1,5 @@
+https://github.com/cedgerly/cyanobacteria-project
+
 ## makes directory for Project
 mkdir cyan_proj
 ## shows us out current git version
@@ -17,11 +19,13 @@ conda activate qiime2-2022.8
 ## create output file
 echo Ratt > qiime_file
 ## Uses qiime to edit the data
-qiime tools import --type "CasavaOneEightSingleLanePerSampleDirFmt" --input-path "/home/users/cme1029/cyan_proj/trimmed_fastq" --output-path "/home/users/cme1029/cyan_proj/qiime_file"
+qiime tools import \
+ --type "SampleData[PairedEndSequencesWithQuality]" \
+ --input-format CasavaOneEightSingleLanePerSampleDirFmt --input-path "/home/users/cme1029/cyan_proj/trimmed_fastq" --output-path "/home/users/cme1029/cyan_proj/qiime_file.qza"
 
 # Removing Primers
 qiime cutadapt trim-paired \
-    --i-demultiplexed-sequences "/home/users/cme1029/cyan_proj/qiime_file \
+    --i-demultiplexed-sequences "/home/users/cme1029/cyan_proj/qiime_file.qza" \
     --p-cores 4 \
     --p-front-f GTGYCAGCMGCCGCGGTAA \
     --p-front-r CCGYCAATTYMTTTRAGTTT \
@@ -37,20 +41,41 @@ qiime demux summarize \
 
 ## Denoising
 qiime dada2 denoise-paired \
-    --i-demultiplexed-seqs qiime_out/${run}_demux_cutadapt.qza  \
-    --p-trunc-len-f ${trunclenf} \
-    --p-trunc-len-r ${trunclenr} \
+    --i-demultiplexed-seqs /home/users/cme1029/cyan_proj/qiime_trimmed/outputs.qza \
+    --p-trunc-len-f 0 \
+    --p-trunc-len-r 0 \
     --p-trim-left-f 0 \
     --p-trim-left-r 0 \
     --p-n-threads 4 \
-    --o-denoising-stats <path to an output directory>/denoising-stats.qza \
-    --o-table <path to an output directory>/feature_table.qza \
-    --o-representative-sequences <path to an output directory>/rep-seqs.qza
+    --o-denoising-stats /home/users/cme1029/cyan_proj/qiime_trimmed/denoising-stats.qza \
+    --o-table /home/users/cme1029/cyan_proj/qiime_trimmed/feature_table.qza \
+    --o-representative-sequences /home/users/cme1029/cyan_proj/qiime_trimmed/rep-seqs.qza
 
+## Metadata
 qiime metadata tabulate \
-    --m-input-file <path to an output directory>/denoising-stats.qza \
-    --o-visualization <path to an output directory>/denoising-stats.qzv
+    --m-input-file /home/users/cme1029/cyan_proj/qiime_trimmed/denoising-stats.qza \
+    --o-visualization /home/users/cme1029/cyan_proj/qiime_trimmed/denoising-stats.qzv
 
+## Table
 qiime feature-table tabulate-seqs \
-        --i-data <path to an output directory>/rep-seqs.qza \
-        --o-visualization <path to an output directory>/rep-seqs.qzv
+        --i-data /home/users/cme1029/cyan_proj/qiime_trimmed/rep-seqs.qza \
+        --o-visualization /home/users/cme1029/cyan_proj/qiime_trimmed/rep-seqs.qzv
+
+## Taxonomy assignment
+qiime feature-classifier classify-sklearn \
+    --i-classifier /tmp/gen711_project_data/cyano/classifier_16S_V4-V5.qza \
+    --i-reads /home/users/cme1029/cyan_proj/qiime_trimmed/rep-seqs.qza \
+    --o-classification /home/users/cme1029/cyan_proj/qiime_trimmed/taxo
+
+## Metadata
+qiime taxa barplot \
+     --i-table /home/users/cme1029/cyan_proj/qiime_trimmed/rep-seqs.qza \
+     --m-metadata-file /tmp/gen711_project_data/FMT_3/sample-metadata.tsv \
+     --i-taxonomy /home/users/cme1029/cyan_proj/qiime_trimmed/taxo.qza \
+     --o-visualization my-barplot.qzv
+
+qiime taxa barplot \
+     --i-table feature_table-1.qza \
+     --m-metadata-file sample-metadata.tsv
+     --i-taxonomy taxonomy.qza \
+     --o-visualization my-barplot.qzv
