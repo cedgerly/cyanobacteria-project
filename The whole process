@@ -75,7 +75,7 @@ qiime taxa barplot \
      --o-visualization my-barplot.qzv
 
 qiime taxa barplot \
-     --i-table feature_table-1.qza \
-     --m-metadata-file sample-metadata.tsv
-     --i-taxonomy taxonomy.qza \
+     --i-table /home/users/cme1029/cyan_proj/qiime_trimmed/taxo.qza \
+     --m-metadata-file /tmp/gen711_project_data/FMT_3/sample-metadata.tsv \
+     --i-taxonomy /home/users/cme1029/cyan_proj/qiime_trimmed/taxo.qza \
      --o-visualization my-barplot.qzv
